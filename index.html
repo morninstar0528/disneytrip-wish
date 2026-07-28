@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>迪士尼與 EPCOT 頂級精準導覽手帳 (協作版)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        mickeyRed: '#DA0F10',
+                        mickeyBlack: '#111111',
+                        mickeyYellow: '#FFB321',
+                        mickeyCream: '#FFFDF6',
+                        cruiseBlue: '#002868',
+                        cruiseAccent: '#0055A5',
+                        epcotPurple: '#4A148C',
+                        epcotTeal: '#00695C',
+                    },
+                    fontFamily: {
+                        sans: ['Nunito', 'PingFang TC', 'Microsoft JhengHei', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .drawer-slide {
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        /* 3D 立體米奇頭選單按鈕 */
+        .mickey-custom-btn {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 72px;
+            height: 72px;
+            cursor: pointer;
+            z-index: 40;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.35));
+            transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .mickey-custom-btn svg {
+            width: 100%;
+            height: 100%;
+            transition: transform 0.15s ease;
+        }
+        .mickey-custom-btn:hover svg {
+            transform: scale(1.08);
+        }
+        .mickey-custom-btn:active svg {
+            transform: scale(0.92) translateY(3px);
+        }
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.9) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .animate-modal {
+            animation: modalFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+    </style>
+</head>
+<body class="bg-gray-950 font-sans text-gray-800 antialiased flex flex-col h-screen max-w-md mx-auto shadow-2xl relative overflow-hidden">
+
+    <!-- 手機外框內的主體 -->
+    <div class="flex-1 bg-mickeyCream flex flex-col relative overflow-hidden shadow-inner">
+
+        <!-- HEADER -->
+        <header class="bg-white px-4 py-2.5 flex justify-between items-center z-30 border-b border-gray-200 shadow-xs">
+            <div class="flex items-center space-x-2">
+                <div>
+                    <h1 class="font-black text-xs tracking-wider text-mickeyBlack flex items-center gap-1">
+                        MICKEY TRIP <span class="w-2 h-2 rounded-full bg-mickeyRed inline-block"></span>
+                    </h1>
+                    <p class="text-[10px] text-gray-400 font-bold">2026.10.21 - 10.31 奧蘭多全指南</p>
+                </div>
+            </div>
+
+            <!-- 雲端協作同步狀態徽章 & 分享按鈕 -->
+            <div class="flex items-center gap-1.5">
+                <button onclick="shareTripLink()" title="複製分享連結" class="text-[10px] font-black bg-mickeyRed text-white px-2 py-1 rounded-full shadow-xs hover:bg-red-700 transition flex items-center gap-1">
+                    <i class="fa-solid fa-share-nodes"></i> 分享
+                </button>
+                <div id="sync-status-badge" class="text-[10px] font-extrabold text-emerald-700 bg-emerald-50 px-2 py-1 rounded-full border border-emerald-200 flex items-center gap-1 shadow-2xs">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span id="sync-status-text">同步中</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- 主目錄側邊 Drawer -->
+        <div id="main-drawer" class="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex justify-start hidden">
+            <div class="bg-white w-4/5 max-w-xs h-full p-6 text-gray-800 flex flex-col justify-between shadow-2xl border-r border-gray-200 transform -translate-x-full drawer-slide" id="drawer-content">
+                <div class="space-y-5 overflow-y-auto no-scrollbar pb-6">
+                    <div class="flex justify-between items-center border-b border-gray-200 pb-3">
+                        <div class="flex items-center space-x-2">
+                            <div class="w-3.5 h-3.5 rounded-full bg-mickeyRed"></div>
+                            <div class="w-3.5 h-3.5 rounded-full bg-mickeyYellow"></div>
+                            <h2 class="font-black text-sm tracking-wider text-mickeyBlack">快速導覽目錄</h2>
+                        </div>
+                        <button onclick="toggleDrawer()" class="text-gray-400 hover:text-gray-600 p-1"><i class="fa-solid fa-xmark text-base"></i></button>
+                    </div>
+
+                    <div class="space-y-2">
+                        <button onclick="navigateDirectory('itinerary')" class="w-full text-left p-3 rounded-2xl bg-gray-50 hover:bg-mickeyBlack hover:text-white transition flex items-center justify-between border border-gray-100">
+                            <div class="flex items-center space-x-3">
+                                <i class="fa-solid fa-calendar-days text-mickeyRed text-sm"></i>
+                                <span class="font-black text-xs">每日行程與交通/住宿總覽</span>
+                            </div>
+                            <i class="fa-solid fa-chevron-right text-[10px] text-gray-300"></i>
+                        </button>
+
+                        <button onclick="navigateDirectory('cruise-map')" class="w-full text-left p-3 rounded-2xl bg-blue-50 text-cruiseBlue transition flex items-center justify-between border border-blue-200">
+                            <div class="flex items-center space-x-3">
+                                <i class="fa-solid fa-ship text-cruiseAccent text-sm"></i>
+                                <span class="font-black text-xs">🚢 許願號甲板餐廳與商品導覽</span>
+                            </div>
+                            <i class="fa-solid fa-chevron-right text-[10px] text-cruiseAccent"></i>
+                        </button>
+
+                        <button onclick="navigateDirectory('epcot-map')" class="w-full text-left p-3 rounded-2xl bg-purple-50 text-epcotPurple transition flex items-center justify-between border border-purple-200">
+                            <div class="flex items-center space-x-3">
+                                <i class="fa-solid fa-earth-americas text-epcotPurple text-sm"></i>
+                                <span class="font-black text-xs">🌐 EPCOT 未來世界主題樂園指南</span>
+                            </div>
+                            <i class="fa-solid fa-chevron-right text-[10px] text-epcotPurple"></i>
+                        </button>
+                    </div>
+
+                    <!-- 協作者連線資訊卡 -->
+                    <div class="bg-gray-50 p-3.5 rounded-2xl border border-gray-200 text-xs space-y-1">
+                        <div class="font-black text-gray-700 flex items-center gap-1.5">
+                            <i class="fa-solid fa-users text-mickeyRed"></i> 協同編輯狀態
+                        </div>
+                        <p class="text-[10px] text-gray-500 font-bold">所有成員進行的勾選與修改將即時發布給所有在線夥伴。</p>
+                        <div id="user-id-display" class="text-[9px] font-mono bg-white p-1.5 rounded border border-gray-200 text-gray-400 truncate mt-1">
+                            用戶 ID: 載入中...
+                        </div>
+                    </div>
+                </div>
+
+                <div class="border-t border-gray-200 pt-3 flex flex-col items-center justify-center">
+                    <button onclick="toggleDrawer()" class="w-full py-2.5 bg-mickeyBlack text-white font-black text-xs rounded-xl shadow-xs">
+                        關閉目錄
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MAIN CONTENT AREA -->
+        <main class="flex-1 overflow-y-auto p-4 space-y-3.5 relative pb-24" id="main-content">
+
+            <!-- 檢視畫面 1：完整每日行程（包含交通、住宿與 Day 0 檢查清單） -->
+            <div id="view-itinerary" class="space-y-3.5">
+                <div class="relative rounded-3xl overflow-hidden shadow-md bg-gradient-to-r from-red-600 via-mickeyRed to-black text-white p-4">
+                    <div class="relative z-10 space-y-1">
+                        <span class="bg-mickeyYellow text-mickeyBlack text-[10px] font-black px-2.5 py-0.5 rounded-full">2026 奧蘭多之旅</span>
+                        <h2 class="font-black text-sm">經典迪士尼與許願號郵輪手帳</h2>
+                        <p class="text-[11px] text-red-100">點擊上方日期滑塊快速切換每日行程、班機與飯店憑證。</p>
+                    </div>
+                </div>
+
+                <!-- 日期選擇滑頁 -->
+                <div id="swipe-date-container" class="flex space-x-2 overflow-x-auto no-scrollbar pb-1 px-0.5">
+                    <button onclick="switchDate('10/21')" id="date-btn-1021" class="date-btn shrink-0 px-4 py-2 rounded-2xl font-black text-xs bg-mickeyBlack text-white shadow-xs transition flex flex-col items-center min-w-[70px]">
+                        <span>10/21</span>
+                        <span class="text-[9px] text-mickeyYellow">Day 0</span>
+                    </button>
+                    <button onclick="switchDate('10/22')" id="date-btn-1022" class="date-btn shrink-0 px-4 py-2 rounded-2xl font-bold text-xs bg-white text-gray-500 border border-gray-200 transition flex flex-col items-center min-w-[70px]">
+                        <span>10/22</span>
+                        <span class="text-[9px] opacity-60">Day 1</span>
+                    </button>
+                    <button onclick="switchDate('10/23')" id="date-btn-1023" class="date-btn shrink-0 px-4 py-2 rounded-2xl font-bold text-xs bg-white text-gray-500 border border-gray-200 transition flex flex-col items-center min-w-[70px]">
+                        <span>10/23</span>
+                        <span class="text-[9px] opacity-60">Day 2</span>
+                    </button>
+                    <button onclick="switchDate('10/24')" id="date-btn-1024" class="date-btn shrink-0 px-4 py-2 rounded-2xl font-bold text-xs bg-white text-gray-500 border border-gray-200 transition flex flex-col items-center min-w-[70px]">
+                        <span>10/24</span>
+                        <span class="text-[9px] opacity-60">Day 3</span>
+                    </button>
+                    <button onclick="switchDate('10/25')" id="date-btn-1025" class="date-btn shrink-0 px-4 py-2 rounded-2xl font-bold text-xs bg-white text-gray-500 border border-gray-200 transition flex flex-col items-center min-w-[70px]">
+                        <span>10/25</span>
+                        <span class="text-[9px] opacity-60">Day 4</span>
+                    </button>
+                    <button onclick="switchDate('10/26')" id="date-btn-1026" class="date-btn shrink-0 px-4 py-2 rounded-2xl font-bold text-xs bg-white text-gray-500 border border-gray-200 transition flex flex-col items-center min-w-[70px]">
+                        <span>10/26</span>
+                        <span class="text-[9px] opacity-60">Day 5</span>
+                    </button>
+                    <button onclick="switchDate('10/27')" id="date-btn-1027" class="date-btn shrink-0 px-4 py-2 rounded-2xl font-bold text-xs bg-white text-gray-500 border border-gray-200 transition flex flex-col items-center min-w-[70px]">
+                        <span>10/27</span>
+                        <span class="text-[9px] opacity-60">Day 6</span>
+                    </button>
+                    <button onclick="switchDate('10/28')" id="date-btn-1028" class="date-btn shrink-0 px-4 py-2 rounded-2xl font-bold text-xs bg-white text-gray-500 border border-gray-200 transition flex flex-col items-center min-w-[70px]">
+                        <span>10/28</span>
+                        <span class="text-[9px] opacity-60">Day 7</span>
+                    </button>
+                    <button onclick="switchDate('10/29')" id="date-btn-1029" class="date-btn shrink-0 px-4 py-2 rounded-2xl font-bold text-xs bg-white text-gray-500 border border-gray-200 transition flex flex-col items-center min-w-[70px]">
+                        <span>10/29</span>
+                        <span class="text-[9px] opacity-60">Day 8</span>
+                    </button>
+                    <button onclick="switchDate('10/30')" id="date-btn-1030" class="date-btn shrink-0 px-4 py-2 rounded-2xl font-bold text-xs bg-white text-gray-500 border border-gray-200 transition flex flex-col items-center min-w-[70px]">
+                        <span>10/30</span>
+                        <span class="text-[9px] opacity-60">Day 9</span>
+                    </button>
+                    <button onclick="switchDate('10/31')" id="date-btn-1031" class="date-btn shrink-0 px-4 py-2 rounded-2xl font-bold text-xs bg-white text-gray-500 border border-gray-200 transition flex flex-col items-center min-w-[70px]">
+                        <span>10/31</span>
+                        <span class="text-[9px] opacity-60">Day 10</span>
+                    </button>
+                </div>
+
+                <div class="flex justify-between items-center pt-1 px-1">
+                    <h2 id="current-date-title" class="font-black text-xs text-mickeyBlack flex items-center gap-2">
+                        <i class="fa-solid fa-clipboard-check text-mickeyYellow"></i> 10/21 行前憑證與備品核對
+                    </h2>
+                    <button id="add-dayzero-btn" onclick="openDayZeroModal()" class="bg-mickeyBlack text-white hover:bg-gray-800 font-black text-[11px] py-1.5 px-3 rounded-xl shadow-xs transition flex items-center gap-1">
+                        <i class="fa-solid fa-plus text-[10px]"></i> 新增檢查項
+                    </button>
+                    <button id="add-itinerary-btn" onclick="openItineraryModal()" class="bg-mickeyBlack text-white hover:bg-gray-800 font-black text-[11px] py-1.5 px-3 rounded-xl shadow-xs transition flex items-center gap-1 hidden">
+                        <i class="fa-solid fa-plus text-[10px]"></i> 新增行程/交通
+                    </button>
+                </div>
+
+                <div id="itinerary-list" class="relative space-y-0"></div>
+            </div>
+
+            <!-- 檢視畫面 2：Disney Wish 許願號主題頁面 -->
+            <div id="view-cruise-map" class="space-y-4 hidden">
+                <div class="relative rounded-3xl overflow-hidden shadow-lg bg-gradient-to-r from-cruiseBlue via-blue-900 to-cruiseAccent text-white p-4">
+                    <div class="flex justify-between items-center relative z-10">
+                        <span class="bg-mickeyYellow text-mickeyBlack font-extrabold text-[10px] px-2.5 py-0.5 rounded-full">Booking #44951956</span>
+                        <span class="text-xs font-bold text-blue-100"><i class="fa-solid fa-ship"></i> 許願號全指南</span>
+                    </div>
+                    <h2 class="font-black text-base pt-1 relative z-10">Disney Wish 甲板設施與精準導覽</h2>
+                    <p class="text-[11px] text-blue-100 relative z-10">點擊卡片彈出詳盡官方特色介紹與推薦商品/菜色對照！</p>
+                </div>
+
+                <!-- 郵輪功能分類列 -->
+                <div class="grid grid-cols-4 gap-2">
+                    <button onclick="filterCategory('food')" id="cat-btn-food" class="cat-btn p-2.5 rounded-2xl font-black text-xs bg-cruiseBlue text-white shadow-xs flex flex-col items-center justify-center gap-1 transition">
+                        <i class="fa-solid fa-utensils text-mickeyYellow"></i> 餐廳時段
+                    </button>
+                    <button onclick="filterCategory('show')" id="cat-btn-show" class="cat-btn p-2.5 rounded-2xl font-black text-xs bg-white text-gray-700 border border-gray-200 shadow-xs flex flex-col items-center justify-center gap-1 transition">
+                        <i class="fa-solid fa-masks-theater text-mickeyRed"></i> 表演時間
+                    </button>
+                    <button onclick="filterCategory('shop')" id="cat-btn-shop" class="cat-btn p-2.5 rounded-2xl font-black text-xs bg-white text-gray-700 border border-gray-200 shadow-xs flex flex-col items-center justify-center gap-1 transition">
+                        <i class="fa-solid fa-bag-shopping text-cruiseAccent"></i> 商店購物
+                    </button>
+                    <button onclick="filterCategory('fun')" id="cat-btn-fun" class="cat-btn p-2.5 rounded-2xl font-black text-xs bg-white text-gray-700 border border-gray-200 shadow-xs flex flex-col items-center justify-center gap-1 transition">
+                        <i class="fa-solid fa-water-ladder text-mickeyYellow"></i> 娛樂設施
+                    </button>
+                </div>
+
+                <!-- 下拉式樓層選單 -->
+                <div class="bg-white p-3.5 rounded-2xl border border-gray-200 shadow-xs flex items-center justify-between">
+                    <span class="font-black text-xs text-gray-700 flex items-center gap-2">
+                        <i class="fa-solid fa-layer-group text-cruiseAccent"></i> 選擇甲板樓層：
+                    </span>
+                    <select id="deck-dropdown" onchange="onDeckDropdownChange(this.value)" class="bg-gray-50 border border-gray-200 text-cruiseBlue font-black text-xs rounded-xl p-2 focus:outline-none cursor-pointer">
+                        <option value="deck3">Deck 3 (三大主餐廳與華特劇院)</option>
+                        <option value="deck5">Deck 5 (SPA 與兒童俱樂部)</option>
+                        <option value="deck11">Deck 11 (美食市集廣場)</option>
+                        <option value="deck12">Deck 12 (水上樂園與泳池)</option>
+                        <option value="deck14">Deck 14 (運動景觀甲板)</option>
+                    </select>
+                </div>
+
+                <div class="space-y-3" id="deck-card-container"></div>
+            </div>
+
+            <!-- 檢視畫面 3：EPCOT 未來世界主題頁面 -->
+            <div id="view-epcot-map" class="space-y-4 hidden">
+                <div class="relative rounded-3xl overflow-hidden shadow-lg bg-gradient-to-r from-purple-900 via-epcotPurple to-indigo-700 text-white p-4">
+                    <div class="flex justify-between items-center relative z-10">
+                        <span class="bg-mickeyYellow text-mickeyBlack font-extrabold text-[10px] px-2.5 py-0.5 rounded-full">Walt Disney World</span>
+                        <span class="text-xs font-bold text-purple-100"><i class="fa-solid fa-earth-americas"></i> EPCOT 樂園</span>
+                    </div>
+                    <h2 class="font-black text-base pt-1 relative z-10">EPCOT 全設施、美食與煙火秀導覽</h2>
+                    <p class="text-[11px] text-purple-100 relative z-10">點擊卡片查看詳細特色、煙火/音樂會演出時間與推薦必吃榜！</p>
+                </div>
+
+                <!-- EPCOT 功能分類列 -->
+                <div class="grid grid-cols-4 gap-2">
+                    <button onclick="filterEpcotCategory('rides')" id="epcat-btn-rides" class="epcat-btn p-2.5 rounded-2xl font-black text-xs bg-epcotPurple text-white shadow-xs flex flex-col items-center justify-center gap-1 transition">
+                        <i class="fa-solid fa-rocket text-mickeyYellow"></i> 熱門設施
+                    </button>
+                    <button onclick="filterEpcotCategory('food')" id="epcat-btn-food" class="epcat-btn p-2.5 rounded-2xl font-black text-xs bg-white text-gray-700 border border-gray-200 shadow-xs flex flex-col items-center justify-center gap-1 transition">
+                        <i class="fa-solid fa-utensils text-mickeyRed"></i> 美食餐廳
+                    </button>
+                    <button onclick="filterEpcotCategory('shows')" id="epcat-btn-shows" class="epcat-btn p-2.5 rounded-2xl font-black text-xs bg-white text-gray-700 border border-gray-200 shadow-xs flex flex-col items-center justify-center gap-1 transition">
+                        <i class="fa-solid fa-fireworks text-purple-600"></i> 煙火/音樂會
+                    </button>
+                    <button onclick="filterEpcotCategory('shops')" id="epcat-btn-shops" class="epcat-btn p-2.5 rounded-2xl font-black text-xs bg-white text-gray-700 border border-gray-200 shadow-xs flex flex-col items-center justify-center gap-1 transition">
+                        <i class="fa-solid fa-gift text-epcotTeal"></i> 紀念商店
+                    </button>
+                </div>
+
+                <div class="bg-white p-3.5 rounded-2xl border border-gray-200 shadow-xs flex items-center justify-between">
+                    <span class="font-black text-xs text-gray-700 flex items-center gap-2">
+                        <i class="fa-solid fa-map-location-dot text-epcotPurple"></i> 選擇 EPCOT 展區：
+                    </span>
+                    <select id="epcot-zone-dropdown" onchange="onEpcotZoneChange(this.value)" class="bg-gray-50 border border-gray-200 text-epcotPurple font-black text-xs rounded-xl p-2 focus:outline-none cursor-pointer">
+                        <option value="world_discovery">World Discovery (銀河守護隊/太空220)</option>
+                        <option value="world_showcase">World Showcase (環球11國展館區)</option>
+                        <option value="world_celebration">World Celebration (Spaceship Earth/地標球)</option>
+                        <option value="world_nature">World Nature (飛越地平線/莫娜水之旅)</option>
+                    </select>
+                </div>
+
+                <div class="space-y-3" id="epcot-card-container"></div>
+            </div>
+
+        </main>
+
+        <!-- 浮動 3D 立體米奇頭選單按鈕 -->
+        <button onclick="toggleDrawer()" title="開啟主目錄選單" class="mickey-custom-btn focus:outline-none">
+            <svg viewBox="0 0 100 100" class="w-full h-full">
+                <circle cx="26" cy="28" r="20" fill="#111111"/>
+                <circle cx="74" cy="28" r="20" fill="#111111"/>
+                <path d="M 32 50 C 32 35, 68 35, 68 50 Z" fill="#111111"/>
+                <circle cx="50" cy="48" r="26" fill="#111111"/>
+                <path d="M 24 50 C 24 76, 76 76, 76 50 Z" fill="#DA0F10"/>
+                <ellipse cx="43" cy="62" rx="3.5" ry="6" fill="#111111"/>
+                <ellipse cx="57" cy="62" rx="3.5" ry="6" fill="#111111"/>
+            </svg>
+        </button>
+
+    </div>
+
+    <!-- MODAL: 詳細設施/餐廳/商品對照 Modal -->
+    <div id="detail-modal" class="fixed inset-0 bg-black/75 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl border border-gray-200 relative animate-modal max-h-[85vh] flex flex-col">
+            <div id="modal-header-box" class="relative p-6 bg-gradient-to-r from-blue-900 to-indigo-800 text-white shrink-0 flex items-center justify-between">
+                <div class="space-y-1 relative z-10 pr-6">
+                    <span id="modal-deck" class="text-[10px] font-black bg-mickeyYellow text-mickeyBlack px-2.5 py-0.5 rounded-full uppercase tracking-wider">位置標籤</span>
+                    <h3 id="modal-title" class="font-black text-base drop-shadow-md pt-1">名稱</h3>
+                </div>
+                <div id="modal-icon-bg" class="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white text-2xl shrink-0">
+                    <i id="modal-icon" class="fa-solid fa-star"></i>
+                </div>
+                <button onclick="closeDetailModal()" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/30 text-white flex items-center justify-center hover:bg-black/60 transition text-sm">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="p-5 overflow-y-auto space-y-4 flex-1 no-scrollbar">
+                <div class="text-xs font-black text-mickeyRed bg-red-50 p-2.5 rounded-2xl border border-red-100 flex items-center gap-2">
+                    <i class="fa-regular fa-clock text-sm shrink-0"></i>
+                    <div>
+                        <span class="text-[10px] text-gray-400 block font-bold">營業/表演/建議時間</span>
+                        <span id="modal-time">時間資訊</span>
+                    </div>
+                </div>
+
+                <div class="space-y-1.5">
+                    <h4 class="font-extrabold text-xs text-mickeyBlack flex items-center gap-1.5">
+                        <i class="fa-solid fa-wand-magic-sparkles text-mickeyYellow"></i> 設施與體驗特色：
+                    </h4>
+                    <p id="modal-desc" class="text-xs text-gray-600 leading-relaxed font-bold bg-gray-50 p-3 rounded-2xl border border-gray-100">
+                        詳細介紹內容...
+                    </p>
+                </div>
+
+                <div id="modal-dishes-box" class="space-y-2 pt-1 border-t border-gray-100">
+                    <h4 class="font-extrabold text-xs text-cruiseBlue flex items-center gap-1.5">
+                        <i class="fa-solid fa-star text-mickeyYellow"></i> <span id="modal-highlights-title">推薦必點美食 / 體驗亮點：</span>
+                    </h4>
+                    <div id="modal-dishes" class="grid grid-cols-1 gap-1.5"></div>
+                </div>
+            </div>
+
+            <div class="p-3 bg-gray-50 border-t border-gray-100 shrink-0">
+                <button onclick="closeDetailModal()" class="w-full bg-mickeyBlack text-white font-black py-2.5 rounded-2xl shadow-xs hover:bg-gray-800 transition text-xs">
+                    關閉視窗
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: 新增/編輯 Day 0 檢查項 (含防誤刪防護) -->
+    <div id="dayzero-modal" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white w-full max-w-sm rounded-3xl p-5 space-y-4 shadow-2xl border border-gray-200">
+            <div class="flex justify-between items-center border-b border-gray-100 pb-2">
+                <h3 id="dz-modal-title" class="font-black text-mickeyBlack text-xs flex items-center gap-1.5">
+                    <i class="fa-solid fa-clipboard-check text-mickeyYellow"></i> 新增 Day 0 檢查項
+                </h3>
+                <button onclick="closeDayZeroModal()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-sm"></i></button>
+            </div>
+
+            <input type="hidden" id="edit-dayzero-id" value="">
+
+            <div class="space-y-3">
+                <div>
+                    <label class="text-[11px] font-bold text-gray-500 block mb-1">分類標籤</label>
+                    <input type="text" id="dz-cat" placeholder="例如: 重要證件 / 預訂憑證" class="w-full p-2.5 border border-gray-200 rounded-xl text-xs focus:outline-none bg-gray-50 font-bold focus:bg-white focus:border-mickeyRed">
+                </div>
+                <div>
+                    <label class="text-[11px] font-bold text-gray-500 block mb-1">項目名稱 *</label>
+                    <input type="text" id="dz-title" placeholder="例如: 護照正本" class="w-full p-2.5 border border-gray-200 rounded-xl text-xs font-bold focus:outline-none bg-gray-50 focus:bg-white focus:border-mickeyRed">
+                </div>
+                <div>
+                    <label class="text-[11px] font-bold text-gray-500 block mb-1">詳細說明 / 憑證號碼對照</label>
+                    <textarea id="dz-note" placeholder="例如: 預訂編號: 44951956" class="w-full p-2.5 border border-gray-200 rounded-xl text-xs font-bold h-20 focus:outline-none bg-gray-50 focus:bg-white focus:border-mickeyRed"></textarea>
+                </div>
+            </div>
+
+            <div class="flex flex-col space-y-2 pt-2">
+                <button onclick="saveDayZeroItem()" class="w-full bg-mickeyBlack text-white font-black py-2.5 rounded-xl shadow-xs hover:bg-gray-800 text-xs transition">
+                    <i class="fa-solid fa-cloud-arrow-up mr-1"></i> 儲存並即時同步至雲端
+                </button>
+                <!-- 刪除按鈕 (僅在編輯已有項目時出現，且需要二次確認) -->
+                <button id="dz-delete-btn" onclick="promptDeleteConfirmation()" class="w-full bg-red-50 text-mickeyRed hover:bg-red-100 border border-red-200 font-bold py-2 rounded-xl text-xs transition hidden">
+                    <i class="fa-solid fa-trash-can mr-1"></i> 刪除此檢查項目
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: 刪除確認 Modal -->
+    <div id="delete-confirm-modal" class="fixed inset-0 bg-black/70 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white w-full max-w-xs rounded-3xl p-5 space-y-4 shadow-2xl border border-gray-200 text-center">
+            <div class="w-12 h-12 bg-red-100 text-mickeyRed rounded-full flex items-center justify-center mx-auto text-xl">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div class="space-y-1">
+                <h3 class="font-black text-sm text-gray-900">確定要刪除此項目？</h3>
+                <p class="text-xs text-gray-500 font-bold">刪除後將同步從雲端資料庫移除，此動作無法復原。</p>
+            </div>
+            <div class="grid grid-cols-2 gap-2 pt-2">
+                <button onclick="closeDeleteConfirmModal()" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-black py-2 rounded-xl text-xs transition">
+                    取消
+                </button>
+                <button onclick="executeConfirmDelete()" class="w-full bg-mickeyRed hover:bg-red-700 text-white font-black py-2 rounded-xl text-xs transition shadow-xs">
+                    確定刪除
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 複製連結成功 Toast 通知 -->
+    <div id="toast-msg" class="fixed bottom-20 left-1/2 -translate-x-1/2 bg-mickeyBlack text-white font-black text-xs px-4 py-2.5 rounded-2xl shadow-2xl z-50 flex items-center gap-2 transition opacity-0 pointer-events-none transform translate-y-2">
+        <i class="fa-solid fa-circle-check text-emerald-400"></i>
+        <span id="toast-text">已複製協作連結！發送給夥伴即可同步編輯</span>
+    </div>
+
+    <!-- FIREBASE MODULE & APPLICATION LOGIC -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Firebase 初始化邏輯與正式專案設定
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'mickey-trip-2026';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' 
+            ? JSON.parse(__firebase_config) 
+            : {
+                apiKey: "AIzaSyDRyZ4APvVvJ7jwxy2S8aqP9lIWmqjf7po",
+                authDomain: "disneytrip-wish.firebaseapp.com",
+                projectId: "disneytrip-wish",
+                storageBucket: "disneytrip-wish.firebasestorage.app",
+                messagingSenderId: "137088474334",
+                appId: "1:137088474334:web:dd46e5fa0eac4f0337364f",
+                measurementId: "G-SN9GSK6W5F"
+            };
+
+        let app, auth, db;
+        let currentUser = null;
+        let isCloudConnected = false;
+
+        // 預設預載之 Day 0 檢查項目資料庫
+        let dayZeroChecklist = [
+            { id: 'c1', cat: '重要證件與簽證', title: '護照正本 (效期 6 個月以上)', note: '旅客：陳星佑 / HSIN-YU CHEN / HSING-YU CHEN', checked: true },
+            { id: 'c2', cat: '重要證件與簽證', title: '美國 ESTA 入境許可授權', note: '確認已核准並儲存手機電子檔/紙本', checked: true },
+            { id: 'c3', cat: '預訂憑證', title: '🚢 Disney Wish 迪士尼願望號郵輪憑證', note: '預訂編號: 44951956 | 艙房: 7690 | 訂購人: 陳星佑 (morninstar0528@gmail.com)', checked: true },
+            { id: 'c4', cat: '預訂憑證', title: '🏨 Disney\'s All-Star Sports Resort 訂房單', note: '編號: #1752501634 / #1752483667 | 入住: 10/26', checked: true },
+            { id: 'c5', cat: '預訂憑證', title: '🏨 Days Inn & Suites Wyndham 訂房單', note: '編號: #1753751138 | 入住: 10/27 (含早餐)', checked: true }
+        ];
+
+        // 每日行程與交通資料庫
+        const itineraryData = {
+            '10/22': [
+                { id: 101, time: '20:10', title: '🛫 臺灣桃園國際機場 (TPE) 起飛', address: '臺灣桃園國際機場 (TPE)', notes: '班機起飛 (時差：奧蘭多比台灣慢 12 小時)。當天全程在機上跨國飛行。', nextTransit: { startTime: '20:10 飛往 奧蘭多', duration: '跨國飛行中', mode: '飛機航班', icon: 'fa-plane', from: 'TPE', to: 'MCO' } },
+                { id: 102, time: '美國時間', title: '🛬 抵達奧蘭多國際機場 (MCO)', address: '1 Jeff Fuqua Blvd, Orlando, FL', notes: '提領行李，準備前往飯店或隔日登船。' }
+            ],
+            '10/23': [
+                { id: 201, time: '上午', title: '前往 Port Canaveral (卡納維爾港)', address: 'Port Canaveral, FL', notes: '準備辦理迪士尼郵輪登船手續', nextTransit: { startTime: '專車轉乘', duration: '車程約 45 分鐘', mode: '接駁車', icon: 'fa-car', from: '奧蘭多', to: 'Port Canaveral 碼頭' } },
+                { id: 202, time: '12:00', title: '🚢 登船：Disney Wish (迪士尼願望號)', address: 'Port Canaveral, Florida', notes: '【郵輪憑證】預訂編號: 44951956 | 艙房: 7690 | 訂購人: 陳星佑' }
+            ],
+            '10/26': [
+                { id: 501, time: '09:00', title: '🏨 Check-in: Disney\'s All-Star Sports Resort', address: '1701 WEST BUENA VISTA DRIVE, 奧蘭多(FL)', notes: '【訂房憑證】編號 #1752501634 / #1752483667 | 可先存放行李。' }
+            ],
+            '10/27': [
+                { id: 601, time: '15:00', title: '🏨 Check-in: Days Inn & Suites Wyndham Airport', address: '1853 Mccoy Road, 奧蘭多國際機場(MCO)', notes: '【訂房憑證】編號 #1753751138 | 包含免費早餐。' }
+            ],
+            '10/31': [
+                { id: 1001, time: '預定航班', title: '🛫 奧蘭多國際機場 (MCO) 搭機返家', address: '1 Jeff Fuqua Blvd, Orlando, FL', notes: '結束愉快的奧蘭多與願望號郵輪之旅！' }
+            ]
+        };
+
+        // 許願號郵輪與 EPCOT 手帳資料
+        const cruiseScheduleData = {
+            'food': [
+                { name: 'Worlds of Marvel 漫威主題餐廳', deck: 'Deck 3', time: '第一場 17:45 / 第二場 20:30', icon: 'fa-shield-halved', color: 'from-red-700 to-slate-900', desc: '全球首創沉浸式漫威科技晚餐！桌上配有量子核心（Quantum Core），蟻人與黃蜂女現場主持，蜘蛛人會親自現身互動！', dishes: ['Pym Mini Pretzel Bites (蟻人量子椒鹽捲餅)', 'Crispy Mac & Cheese Bites (炸起司通心粉球)', 'Seared Ancho-Rubbed Ribeye (香煎肋眼牛排)', 'Subatomic Shrimp & Soba (量子鮮蝦蕎麥冷麵)', 'Pym Doughnut Sundae (巨型量子甜甜圈冰淇淋)'] },
+                { name: 'Arendelle: A Frozen Dining Adventure', deck: 'Deck 3', time: '第一場 17:45 / 第二場 20:30', icon: 'fa-snowflake', color: 'from-cyan-600 to-blue-900', desc: '冰雪奇緣音樂晚宴劇場！慶祝安娜與克里斯托夫訂婚，艾莎、安娜與雪寶會到各桌拍照現場歡唱！', dishes: ['Arendelle Smorgasbord (皇家煙燻鮭魚拼盤)', 'Elsa’s Royal Ribeye Steak (艾莎皇室肋眼牛排)', 'Traditional Nordic Salmon (傳統北歐香煎鮭魚)', 'Olaf’s Snowflake Treats (雪寶檸檬起司蛋糕)'] },
+                { name: '1923 經典晚宴餐廳', deck: 'Deck 3', time: '第一場 17:45 / 第二場 20:30', icon: 'fa-film', color: 'from-amber-700 to-stone-900', desc: '以迪士尼創立年份 1923 命名，展出千件早期動畫手稿與道具，提供優雅的南加州海岸頂級牛排與海鮮。', dishes: ['Chilled Jumbo Tiger Shrimp (冰鎮極品虎蝦)', '1923 Prime Ribeye Steak (1923 頂級黑松露肋眼牛排)', 'Seared Chilean Sea Bass (香煎智利海鱸魚)', 'Classic Hollywood Churros (好萊塢肉桂吉事果)'] },
+                { name: 'Marceline Market 美食市集', deck: 'Deck 11', time: '早餐 07:30 - 10:30 / 午餐 12:00 - 14:30 / 晚餐 17:30 - 21:00', icon: 'fa-utensils', color: 'from-emerald-700 to-teal-900', desc: '全天候精緻自助市集，設有 10 個開放式廚房檔口，包含生鮮海鮮吧、現切燒烤與精致法式甜點。', dishes: ['Fresh Cold Seafood Bar (現剖生蠔、鮮蝦與蟹腳)', 'Carving Station (爐烤現切牛肉與蜜汁火腿)', 'Artisanal Dessert Buffet (法式馬卡龍與千層酥)'] },
+                { name: 'Festival of Foods 快餐吧', deck: 'Deck 11', time: '11:00 - 18:00', icon: 'fa-burger', color: 'from-orange-600 to-amber-800', desc: '泳池畔開放式美式快餐街，包含 BBQ 炭烤、塔可墨西哥捲餅、現烤披薩與全天無限量霜淇淋吧！', dishes: ['Mickey Smokehouse Ribs (米奇煙燻豬肋排)', 'Donald’s Custom Burritos (唐老鴨自選塔可捲餅)', 'Eye Cream Soft-Serve (無限量雙色霜淇淋)'] }
+            ],
+            'show': [{ name: 'Disney The Little Mermaid (小美人魚音樂劇)', deck: 'Deck 3-4 (華特劇院)', time: '第一場 18:00 / 第二場 20:30', icon: 'fa-water', color: 'from-blue-700 to-indigo-950', desc: '許願號獨家原創百老匯級音樂劇！結合巨型 LED 螢幕、海底燈光與空中飛人特技，重溫迪士尼經典感動。', dishes: ['百老匯專業歌手 Live 現場演唱', '烏蘇拉巨型舞台機械偶效果', '高空懸吊與螢光海底舞蹈'] }],
+            'shop': [
+                { name: 'Mickey’s Mainsail 官方旗艦店', deck: 'Deck 3', time: '09:00 - 23:00', icon: 'fa-anchor', color: 'from-blue-900 to-red-800', desc: 'Wish 號最大購物旗艦店，專售船長米奇限定公仔、DCL 海航風服飾、星巴克聯名馬克杯與限定金屬徽章。', dishes: ['Captain Mickey 限定船長米奇毛絨公仔', 'Disney Cruise Line 官方海魂外套', 'Wish 號金屬限定紀念徽章組', 'Starbucks x DCL 聯名紀念馬克杯'] },
+                { name: 'Treasures and Styles 精品服飾珠寶', deck: 'Deck 3', time: '10:00 - 22:00', icon: 'fa-gem', color: 'from-purple-900 to-pink-900', desc: '迪士尼主題高級珠寶與精品購物空間。提供獨家 Pandora 聯名串飾、Citizen 手錶與高級皮革手提包。', dishes: ['Pandora x DCL 郵輪船錨造型銀飾串珠', 'Citizen 聯名限定米奇黑鋼手錶', 'Disney 經典角色高級金飾與水晶項鍊'] }
+            ],
+            'fun': [{ name: 'AquaMouse 迪士尼海上水上雲霄飛車', deck: 'Deck 12', time: '09:00 - 19:00', icon: 'fa-water-ladder', color: 'from-cyan-500 to-blue-700', desc: '海上首座水上雲霄飛車！760 英尺透明水管道，伴隨米奇獨家短片聲光效果，高空俯瞰大西洋海景！', dishes: ['760 英尺高空透明水滑道', '米奇米妮獨家短片聲光結合', '雙人橡皮艇急速衝刺'] }]
+        };
+
+        const epcotData = {
+            'rides': [
+                { name: 'Guardians of the Galaxy: Cosmic Rewind', deck: 'World Discovery', time: '09:00 - 21:00 (須預約 Virtual Queue / ILL)', icon: 'fa-rocket', color: 'from-purple-800 to-indigo-950', desc: 'EPCOT 超人氣旗艦設施！全球首座 360 度旋轉全倒退急速發射室內雲霄飛車，搭配星爵經典 70-80 年代復古搖滾樂曲，飛躍銀河系拯救宇宙！', dishes: ['360 度倒退急速發射旋轉體驗', '隨機播放 6 首經典復古搖滾金曲', '沉浸式漫威星際拯救任務故事'] },
+                { name: 'Test Track (賽車極速測試)', deck: 'World Discovery', time: '09:00 - 21:00 (支援 Single Rider)', icon: 'fa-car-side', color: 'from-blue-600 to-slate-900', desc: '親自設計自己的概念賽車，並在室外高架賽道上進行時速高達 65 英里 (約 105 km/h) 的極速狂飆衝刺！', dishes: ['親自觸控設計概念酷炫賽車', '室外高架跑道極速 65 mph 風速甩尾', '性能測試排名與科技成果對照'] },
+                { name: 'Soarin\' Around the World (飛越地平線)', deck: 'World Nature', time: '09:00 - 21:00', icon: 'fa-plane-departure', color: 'from-teal-600 to-emerald-900', desc: '懸空巨型球幕飛行影院！帶您凌空飛越泰姬瑪哈陵、巴黎埃菲爾鐵塔、埃及金字塔與長城，並散發各國微風香氣。', dishes: ['懸空巨型 8K 球幕沉浸式飛行體驗', '配合景色的微風與印度茉莉/草香氣噴霧', '全球知名地標俯瞰全景'] },
+                { name: 'Remy’s Ratatouille Adventure (料理鼠王)', deck: 'World Showcase (法國館)', time: '09:00 - 21:00', icon: 'fa-cheese', color: 'from-amber-600 to-red-900', desc: '戴上 3D 眼鏡縮小成小米的尺寸！在食神餐廳的廚房裡穿梭，躲避掃把與火焰，感受濃濃法式風情。', dishes: ['無軌道 3D 鼠鼠造型餐車', '模擬真實廚房溫度、香氣與水花噴霧', '法國館特色巴黎小巷風情'] },
+                { name: 'Frozen Ever After (冰雪奇緣奇航)', deck: 'World Showcase (挪威館)', time: '09:00 - 21:00', icon: 'fa-icicles', color: 'from-blue-500 to-sky-900', desc: '搭乘挪威古老木船前往阿倫黛爾！伴隨耳熟能詳的《Let It Go》，造訪艾莎的冰雪城堡，感受冰雪魔法！', dishes: ['Live-action 擬真發光機甲艾莎與安娜', '《Let It Go》高潮俯衝滑行流水瀑布', '雪寶與小雪球歡樂歌唱互動'] },
+                { name: 'Spaceship Earth (地標巨型銀色球體)', deck: 'World Celebration', time: '09:00 - 21:00', icon: 'fa-earth-americas', color: 'from-slate-700 to-purple-950', desc: 'EPCOT 的經典圓球地標！搭乘平緩的慢速軌道車深入球體內部，探索人類從洞穴壁畫到未來AI科技的文明演進史。', dishes: ['巨型 18 層樓高銀色幾何地標球體探索', '個人專屬互動螢幕繪製未來的生活藍圖', '平緩舒適適合全家放鬆'] }
+            ],
+            'food': [
+                { name: 'Space 220 Restaurant (太空 220 沉浸餐廳)', deck: 'World Discovery', time: '午餐 11:30 - 15:55 / 晚餐 16:00 - 21:00 (須提前預約)', icon: 'fa-user-astronaut', color: 'from-indigo-900 to-black', desc: '搭乘太空電梯上升至距離地球 220 英里的 Centauri 太空站！窗外為即時地球視角與漫步宇航員，享受極致科技美饌。', dishes: ['Space Greens (太空特調沙拉)', 'Centauri Filet Mignon (半人馬座菲力牛排)', 'Atmo Smores (太空熔岩巧克力蛋糕)'] },
+                { name: 'Le Cellier Steakhouse (加拿大館法式牛排)', deck: 'World Showcase (加拿大館)', time: '午餐 12:00 - 15:55 / 晚餐 16:00 - 21:00', icon: 'fa-wine-glass', color: 'from-amber-800 to-stone-900', desc: '城堡地下酒海風格的高級牛排館！以加拿大頂級安格斯牛肉與著名加拿大起司啤酒湯聞名。', dishes: ['Canadian Cheddar Cheese Soup (經典濃郁起司啤酒湯)', 'Le Cellier Filet Mignon (經典菲力牛排配野菇燉飯)', 'Maple Creme Brulee (加拿大楓糖焦糖布蕾)'] },
+                { name: 'Club Cool (可口可樂免費試飲館)', deck: 'World Celebration', time: '09:00 - 21:00 (免費入場)', icon: 'fa-glass-water', color: 'from-red-600 to-red-950', desc: '可口可樂官方主題館，提供免費無限量試飲來自全球 8 個國家的特色汽水風味。', dishes: ['Beverly (義大利傳統苦味汽水挑戰)', 'Cucumber Sprite (小黃瓜雪碧)', 'Bon Bon Shake (馬達加斯加甜香汽水)'] }
+            ],
+            'shows': [
+                { name: 'Luminous: The Symphony of Us (湖畔夜間煙火秀)', deck: 'World Showcase Lagoon', time: '每晚 21:00 準時施放', icon: 'fa-fireworks', color: 'from-purple-800 to-amber-700', desc: 'EPCOT 旗艦級夜間湖畔水舞煙火大秀！結合巨型水幕噴泉、絢麗雷射燈光、迪士尼經典金曲全新編曲與震撼環湖煙火。', dishes: ['環湖 11 國展館最佳觀賞視角', '結合迪士尼經典動人原聲帶', '大型水幕燈光雷射與低空煙火連發'] },
+                { name: 'Eat to the Beat Concert Series (節慶搖滾音樂會)', deck: 'America Gardens Theatre (美國館)', time: '每日 17:30 / 18:45 / 20:00 (共三場)', icon: 'fa-music', color: 'from-amber-600 to-red-800', desc: 'EPCOT 露天劇場音樂祭！由美國知名流行與搖滾樂團現場 Live 開唱，氣氛嗨翻天！', dishes: ['現場免費入場欣賞 Live 樂團演唱', '可購買美食音樂會餐飲優先套票', '星空下露天舞台音響視覺震撼'] }
+            ],
+            'shops': [{ name: 'Creations Shop (EPCOT 旗艦紀念品店)', deck: 'World Celebration', time: '09:00 - 21:00', icon: 'fa-bag-shopping', color: 'from-teal-600 to-indigo-900', desc: 'EPCOT 園區內最大型的明亮購物中心，販售 EPCOT 專屬展館徽章、米奇太空造型玩偶與限定迪士尼發光髮箍。', dishes: ['Spaceship Earth 地標球造型馬克杯', 'EPCOT 限定太空米奇主題玩偶', '精神靈魂紀念衫（Spirit Jersey）', '迪士尼經典耀眼發光米奇髮箍'] }]
+        };
+
+        let currentDate = '10/21';
+
+        async function initFirebase() {
+            try {
+                app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+
+                // 身份驗證
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                currentUser = auth.currentUser;
+                if (currentUser) {
+                    const userEl = document.getElementById('user-id-display');
+                    if (userEl) userEl.innerText = `協作者 ID: ${currentUser.uid}`;
+                }
+
+                isCloudConnected = true;
+                updateSyncUI(true);
+
+                // 監聽公用雲端檢查清單 Collection
+                const checklistRef = collection(db, 'artifacts', appId, 'public', 'data', 'checklist');
+                
+                onSnapshot(checklistRef, (snapshot) => {
+                    if (!snapshot.empty) {
+                        const items = [];
+                        snapshot.forEach((doc) => {
+                            items.push({ id: doc.id, ...doc.data() });
+                        });
+                        dayZeroChecklist = items;
+                    } else {
+                        // 初始化資料庫預設資料
+                        seedInitialChecklist();
+                    }
+                    if (currentDate === '10/21') renderItinerary();
+                }, (error) => {
+                    console.error("Firestore onSnapshot Error:", error);
+                    updateSyncUI(false);
+                });
+
+            } catch (err) {
+                console.warn("無法連接雲端，切換為本地離線模式:", err);
+                isCloudConnected = false;
+                updateSyncUI(false);
+                renderItinerary();
+            }
+        }
+
+        async function seedInitialChecklist() {
+            if (!isCloudConnected || !currentUser) return;
+            try {
+                for (const item of dayZeroChecklist) {
+                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'checklist', item.id);
+                    await setDoc(docRef, item);
+                }
+            } catch (e) {
+                console.error("Error seeding initial checklist:", e);
+            }
+        }
+
+        function updateSyncUI(online) {
+            const statusText = document.getElementById('sync-status-text');
+            const statusBadge = document.getElementById('sync-status-badge');
+            if (online) {
+                statusText.innerText = "已實時同步雲端";
+                statusBadge.className = "text-[10px] font-extrabold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200 flex items-center gap-1.5 shadow-2xs";
+            } else {
+                statusText.innerText = "離線模式";
+                statusBadge.className = "text-[10px] font-extrabold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200 flex items-center gap-1.5 shadow-2xs";
+            }
+        }
+
+        // 全域函式綁定至 window 以利 HTML 事件觸發
+        window.toggleDrawer = function() {
+            const drawer = document.getElementById('main-drawer');
+            const content = document.getElementById('drawer-content');
+            if (!drawer || !content) return;
+
+            if (drawer.classList.contains('hidden')) {
+                drawer.classList.remove('hidden');
+                setTimeout(() => {
+                    content.classList.remove('-translate-x-full');
+                }, 10);
+            } else {
+                content.classList.add('-translate-x-full');
+                setTimeout(() => {
+                    drawer.classList.add('hidden');
+                }, 300);
+            }
+        };
+
+        // 側邊欄分類切換
+        window.navigateDirectory = function(viewId) {
+            document.getElementById('view-itinerary').classList.add('hidden');
+            document.getElementById('view-cruise-map').classList.add('hidden');
+            document.getElementById('view-epcot-map').classList.add('hidden');
+
+            const targetView = document.getElementById('view-' + viewId);
+            if (targetView) {
+                targetView.classList.remove('hidden');
+            }
+
+            if (viewId === 'cruise-map') {
+                window.filterCategory('food');
+            } else if (viewId === 'epcot-map') {
+                window.filterEpcotCategory('rides');
+            } else if (viewId === 'itinerary') {
+                renderItinerary();
+            }
+
+            window.toggleDrawer();
+        };
+
+        // 顯示提示彈窗
+        window.showToast = function(msg) {
+            const toast = document.getElementById('toast-msg');
+            const toastText = document.getElementById('toast-text');
+            if (!toast || !toastText) return;
+            toastText.innerText = msg;
+            toast.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-2');
+            toast.classList.add('opacity-100', 'translate-y-0');
+            setTimeout(() => {
+                toast.classList.remove('opacity-100', 'translate-y-0');
+                toast.classList.add('opacity-0', 'pointer-events-none', 'translate-y-2');
+            }, 2500);
+        };
+
+        // 一鍵複製協作連結
+        window.shareTripLink = function() {
+            const url = window.location.href;
+            const dummy = document.createElement('input');
+            document.body.appendChild(dummy);
+            dummy.value = url;
+            dummy.select();
+            document.execCommand('copy');
+            document.body.removeChild(dummy);
+            window.showToast('已複製網址！傳送給同行夥伴即可共同編輯！');
+        };
+
+        window.switchDate = function(date) {
+            currentDate = date;
+            document.querySelectorAll('.date-btn').forEach(btn => {
+                btn.classList.remove('bg-mickeyBlack', 'text-white', 'shadow-xs');
+                btn.classList.add('bg-white', 'text-gray-500', 'border', 'border-gray-200');
+            });
+
+            const activeBtn = document.getElementById(`date-btn-${date.replace('/', '')}`);
+            if (activeBtn) {
+                activeBtn.classList.remove('bg-white', 'text-gray-500', 'border', 'border-gray-200');
+                activeBtn.classList.add('bg-mickeyBlack', 'text-white', 'shadow-xs');
+                activeBtn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+            }
+
+            if (date === '10/21') {
+                document.getElementById('current-date-title').innerHTML = `<i class="fa-solid fa-clipboard-check text-mickeyYellow"></i> 10/21 行前憑證與備品核對`;
+                document.getElementById('add-dayzero-btn').classList.remove('hidden');
+            } else {
+                document.getElementById('current-date-title').innerHTML = `<i class="fa-solid fa-calendar-day text-mickeyRed"></i> ${date} 行程、交通與住宿`;
+                document.getElementById('add-dayzero-btn').classList.add('hidden');
+            }
+
+            renderItinerary();
+        };
+
+        window.filterCategory = function(catKey) {
+            document.querySelectorAll('.cat-btn').forEach(btn => {
+                btn.classList.remove('bg-cruiseBlue', 'text-white', 'font-black', 'shadow-xs');
+                btn.classList.add('bg-white', 'text-gray-700', 'border', 'border-gray-200');
+            });
+            const activeBtn = document.getElementById(`cat-btn-${catKey}`);
+            if (activeBtn) {
+                activeBtn.classList.remove('bg-white', 'text-gray-700', 'border', 'border-gray-200');
+                activeBtn.classList.add('bg-cruiseBlue', 'text-white', 'font-black', 'shadow-xs');
+            }
+
+            const container = document.getElementById('deck-card-container');
+            renderCardList(container, cruiseScheduleData[catKey] || []);
+        };
+
+        window.onDeckDropdownChange = function() {
+            window.filterCategory('food');
+        };
+
+        window.filterEpcotCategory = function(catKey) {
+            document.querySelectorAll('.epcat-btn').forEach(btn => {
+                btn.classList.remove('bg-epcotPurple', 'text-white', 'font-black', 'shadow-xs');
+                btn.classList.add('bg-white', 'text-gray-700', 'border', 'border-gray-200');
+            });
+            const activeBtn = document.getElementById(`epcat-btn-${catKey}`);
+            if (activeBtn) {
+                activeBtn.classList.remove('bg-white', 'text-gray-700', 'border', 'border-gray-200');
+                activeBtn.classList.add('bg-epcotPurple', 'text-white', 'font-black', 'shadow-xs');
+            }
+
+            const container = document.getElementById('epcot-card-container');
+            renderCardList(container, epcotData[catKey] || []);
+        };
+
+        window.onEpcotZoneChange = function() {
+            window.filterEpcotCategory('rides');
+        };
+
+        function renderCardList(container, list) {
+            container.innerHTML = '';
+            let html = `<div class="space-y-2.5">`;
+            list.forEach(item => {
+                const itemDataStr = JSON.stringify(item).replace(/'/g, "&apos;");
+                html += `
+                    <div onclick='openDetailModalDirect(${itemDataStr})' class="bg-white p-3.5 rounded-2xl border border-gray-200 shadow-xs flex gap-3.5 cursor-pointer hover:border-mickeyRed transition group items-center">
+                        <div class="w-14 h-14 rounded-2xl bg-gradient-to-br ${item.color || 'from-blue-600 to-indigo-900'} text-white flex items-center justify-center text-xl shrink-0 shadow-xs border border-white/20">
+                            <i class="fa-solid ${item.icon || 'fa-star'}"></i>
+                        </div>
+                        <div class="flex-1 space-y-1 overflow-hidden">
+                            <div class="flex justify-between items-start gap-1">
+                                <h4 class="font-black text-xs text-gray-900 group-hover:text-mickeyRed transition truncate">${item.name}</h4>
+                                <span class="text-[9px] bg-purple-50 text-epcotPurple font-extrabold px-1.5 py-0.5 rounded-md whitespace-nowrap">${item.deck}</span>
+                            </div>
+                            <div class="text-[10px] font-black text-mickeyRed flex items-center gap-1">
+                                <i class="fa-regular fa-clock"></i> <span class="truncate">${item.time}</span>
+                            </div>
+                            <p class="text-[10px] text-gray-500 line-clamp-1">${item.desc}</p>
+                            <div class="text-[9px] text-mickeyRed font-black text-right pt-0.5">點擊查看詳細特色與推薦對照 👉</div>
+                        </div>
+                    </div>
+                `;
+            });
+            html += `</div>`;
+            container.innerHTML = html;
+        }
+
+        window.openDetailModalDirect = function(item) {
+            document.getElementById('modal-title').innerText = item.name;
+            document.getElementById('modal-deck').innerText = item.deck || '迪士尼導覽';
+            document.getElementById('modal-time').innerText = item.time || '全天開放';
+            document.getElementById('modal-desc').innerText = item.desc || '';
+            
+            const headerBox = document.getElementById('modal-header-box');
+            headerBox.className = `relative p-6 bg-gradient-to-r ${item.color || 'from-blue-900 to-indigo-800'} text-white shrink-0 flex items-center justify-between`;
+            
+            document.getElementById('modal-icon').className = `fa-solid ${item.icon || 'fa-star'}`;
+
+            const dishesBox = document.getElementById('modal-dishes-box');
+            const dishesContainer = document.getElementById('modal-dishes');
+            dishesContainer.innerHTML = '';
+
+            const list = item.dishes || [];
+            if (list.length > 0) {
+                dishesBox.classList.remove('hidden');
+                list.forEach(d => {
+                    const div = document.createElement('div');
+                    div.className = "bg-amber-50/80 border border-amber-200 p-2.5 rounded-xl text-xs text-amber-950 font-extrabold flex items-start gap-2 shadow-2xs";
+                    div.innerHTML = `<i class="fa-solid fa-star text-mickeyYellow text-[10px] mt-0.5 shrink-0"></i><span>${d}</span>`;
+                    dishesContainer.appendChild(div);
+                });
+            } else {
+                dishesBox.classList.add('hidden');
+            }
+
+            document.getElementById('detail-modal').classList.remove('hidden');
+        };
+
+        window.closeDetailModal = function() {
+            document.getElementById('detail-modal').classList.add('hidden');
+        };
+
+        // 勾選項目（雲端實時同步）
+        window.toggleCheckItem = async function(id) {
+            const item = dayZeroChecklist.find(c => c.id === id);
+            if (!item) return;
+
+            const newCheckedState = !item.checked;
+            item.checked = newCheckedState;
+            renderItinerary();
+
+            if (isCloudConnected) {
+                try {
+                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'checklist', id);
+                    await updateDoc(docRef, { checked: newCheckedState });
+                } catch (e) {
+                    console.error("更新勾選狀態至雲端失敗:", e);
+                }
+            }
+        };
+
+        // 開啟「新增檢查項」Modal
+        window.openDayZeroModal = function() {
+            document.getElementById('dz-modal-title').innerHTML = `<i class="fa-solid fa-plus text-mickeyYellow"></i> 新增 Day 0 檢查項`;
+            document.getElementById('edit-dayzero-id').value = '';
+            document.getElementById('dz-cat').value = '預訂憑證';
+            document.getElementById('dz-title').value = '';
+            document.getElementById('dz-note').value = '';
+            document.getElementById('dz-delete-btn').classList.add('hidden');
+            document.getElementById('dayzero-modal').classList.remove('hidden');
+        };
+
+        // 開啟「編輯檢查項」Modal
+        window.editDayZeroItem = function(id, event) {
+            if (event) event.stopPropagation(); // 阻止觸發底層卡片勾選切換
+            const item = dayZeroChecklist.find(c => c.id === id);
+            if (!item) return;
+
+            document.getElementById('dz-modal-title').innerHTML = `<i class="fa-solid fa-pen-to-square text-mickeyYellow"></i> 編輯檢查項目`;
+            document.getElementById('edit-dayzero-id').value = item.id;
+            document.getElementById('dz-cat').value = item.cat || '';
+            document.getElementById('dz-title').value = item.title || '';
+            document.getElementById('dz-note').value = item.note || '';
+            document.getElementById('dz-delete-btn').classList.remove('hidden');
+            document.getElementById('dayzero-modal').classList.remove('hidden');
+        };
+
+        window.closeDayZeroModal = function() {
+            document.getElementById('dayzero-modal').classList.add('hidden');
+        };
+
+        // 儲存（新增或修改）檢查項
+        window.saveDayZeroItem = async function() {
+            const editId = document.getElementById('edit-dayzero-id').value;
+            const title = document.getElementById('dz-title').value.trim();
+            const cat = document.getElementById('dz-cat').value.trim() || '備品檢查';
+            const note = document.getElementById('dz-note').value.trim();
+
+            if (!title) {
+                document.getElementById('dz-title').classList.add('border-mickeyRed');
+                return;
+            }
+
+            if (editId) {
+                // 編輯現有項目
+                const item = dayZeroChecklist.find(c => c.id === editId);
+                if (item) {
+                    item.title = title;
+                    item.cat = cat;
+                    item.note = note;
+                }
+
+                if (isCloudConnected) {
+                    try {
+                        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'checklist', editId);
+                        await updateDoc(docRef, { title, cat, note });
+                        window.showToast('已同步更新至雲端！');
+                    } catch (e) {
+                        console.error("更新項目至雲端失敗:", e);
+                    }
+                }
+            } else {
+                // 新增項目
+                const newId = 'c_' + Date.now();
+                const newItem = { id: newId, cat, title, note, checked: false };
+                dayZeroChecklist.push(newItem);
+
+                if (isCloudConnected) {
+                    try {
+                        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'checklist', newId);
+                        await setDoc(docRef, newItem);
+                        window.showToast('已新增並同步上傳至雲端！');
+                    } catch (e) {
+                        console.error("新增項目至雲端失敗:", e);
+                    }
+                }
+            }
+
+            closeDayZeroModal();
+            renderItinerary();
+        };
+
+        // 防誤刪保護：顯示二次確認 Modal
+        window.promptDeleteConfirmation = function() {
+            document.getElementById('delete-confirm-modal').classList.remove('hidden');
+        };
+
+        window.closeDeleteConfirmModal = function() {
+            document.getElementById('delete-confirm-modal').classList.add('hidden');
+        };
+
+        // 執行確認刪除動作
+        window.executeConfirmDelete = async function() {
+            const editId = document.getElementById('edit-dayzero-id').value;
+            if (!editId) return;
+
+            // 從本地陣列移除
+            dayZeroChecklist = dayZeroChecklist.filter(c => c.id !== editId);
+
+            // 從雲端資料庫移除
+            if (isCloudConnected) {
+                try {
+                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'checklist', editId);
+                    await deleteDoc(docRef);
+                } catch (e) {
+                    console.error("從雲端刪除項目失敗:", e);
+                }
+            }
+
+            closeDeleteConfirmModal();
+            closeDayZeroModal();
+            renderItinerary();
+        };
+
+        // 渲染行程與 Day 0 檢查清單
+        function renderItinerary() {
+            const container = document.getElementById('itinerary-list');
+            if (!container) return;
+            container.innerHTML = '';
+
+            if (currentDate === '10/21') {
+                const total = dayZeroChecklist.length;
+                const checkedCount = dayZeroChecklist.filter(c => c.checked).length;
+
+                let html = `
+                    <div class="bg-white p-4 rounded-3xl mb-3 shadow-xs border border-gray-200 flex justify-between items-center relative overflow-hidden">
+                        <div class="relative z-10">
+                            <span class="text-[10px] text-mickeyRed font-bold uppercase tracking-wider flex items-center gap-1">
+                                Day 0 行前憑證與檢查清單
+                            </span>
+                            <h3 class="font-black text-xs text-gray-800 mt-0.5">點擊卡片可勾選，點擊右側鉛筆可編輯</h3>
+                        </div>
+                        <span class="bg-amber-100 text-amber-900 text-xs font-black px-3 py-1 rounded-full shadow-xs z-10">${checkedCount} / ${total} 完成</span>
+                    </div>
+                    <div class="space-y-2">
+                `;
+
+                dayZeroChecklist.forEach(item => {
+                    html += `
+                        <div onclick="toggleCheckItem('${item.id}')" class="bg-white p-3.5 rounded-2xl shadow-xs border ${item.checked ? 'border-gray-200/60 bg-gray-50/70 opacity-75' : 'border-gray-200'} flex items-start justify-between cursor-pointer transition hover:border-mickeyRed group">
+                            <div class="flex items-start space-x-3 flex-1 pr-2">
+                                <input type="checkbox" ${item.checked ? 'checked' : ''} class="w-4 h-4 accent-mickeyRed rounded mt-0.5 cursor-pointer shrink-0">
+                                <div class="flex-1">
+                                    <div class="flex flex-wrap items-center gap-1.5">
+                                        <span class="text-xs font-black ${item.checked ? 'line-through text-gray-400' : 'text-gray-800'}">${item.title}</span>
+                                        <span class="text-[9px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full font-bold">${item.cat}</span>
+                                    </div>
+                                    <p class="text-[11px] text-gray-500 mt-1 font-bold ${item.checked ? 'text-gray-400' : ''}">${item.note || ''}</p>
+                                </div>
+                            </div>
+                            <!-- 編輯按鈕 (獨立阻止冒泡事件) -->
+                            <button onclick="editDayZeroItem('${item.id}', event)" title="編輯此檢查項" class="p-1.5 rounded-xl bg-gray-100 hover:bg-mickeyBlack hover:text-white text-gray-500 transition text-xs shrink-0 self-center">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
+                        </div>
+                    `;
+                });
+
+                html += `</div>`;
+                container.innerHTML = html;
+                return;
+            }
+
+            const list = itineraryData[currentDate] || [];
+            if (list.length === 0) {
+                container.innerHTML = `<div class="text-center py-12 text-gray-400 font-bold space-y-2"><i class="fa-solid fa-calendar-xmark text-2xl text-gray-200"></i><div>當天尚無排定行程或交通住宿。</div></div>`;
+                return;
+            }
+
+            list.forEach((item) => {
+                let cardHTML = `
+                    <div class="bg-white rounded-3xl p-4 shadow-xs border border-gray-200 relative space-y-2.5 z-10 transition hover:shadow-sm">
+                        <div class="flex justify-between items-start">
+                            <div class="flex items-center space-x-2">
+                                <span class="bg-mickeyBlack text-white font-black text-[11px] px-2.5 py-0.5 rounded-full">${item.time}</span>
+                                <h3 class="font-black text-xs text-gray-900">${item.title}</h3>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start justify-between text-xs text-gray-600 bg-gray-50 p-2.5 rounded-2xl border border-gray-200">
+                            <div class="flex items-start space-x-1.5 flex-1 pr-2">
+                                <i class="fa-solid fa-location-dot text-mickeyRed mt-0.5"></i>
+                                <span class="break-all font-bold text-[11px]">${item.address || '地址'}</span>
+                            </div>
+                        </div>
+
+                        <div class="text-xs text-gray-700 bg-gray-50 p-2.5 rounded-2xl border-l-4 border-mickeyYellow font-bold">
+                            <span class="font-black text-gray-900">交通/住宿與憑證備註:</span> ${item.notes}
+                        </div>
+                    </div>
+                `;
+
+                if (item.nextTransit) {
+                    const t = item.nextTransit;
+                    cardHTML += `
+                        <div class="my-2.5 flex items-stretch">
+                            <div class="flex flex-col items-center mr-3 ml-2 relative">
+                                <div class="w-0.5 bg-gray-200 flex-1"></div>
+                                <div class="w-6 h-6 rounded-full bg-mickeyBlack text-mickeyYellow flex items-center justify-center my-1 shadow-xs z-10 text-[10px]">
+                                    <i class="fa-solid ${t.icon || 'fa-arrow-down'}"></i>
+                                </div>
+                                <div class="w-0.5 bg-gray-200 flex-1"></div>
+                            </div>
+
+                            <div class="flex-1 bg-white p-3 rounded-2xl border border-gray-200 shadow-xs flex flex-col justify-center space-y-1">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-[10px] bg-gray-100 text-gray-800 font-black px-2 py-0.5 rounded-md flex items-center gap-1">
+                                        <i class="fa-solid fa-route text-mickeyRed"></i> 交通轉乘
+                                    </span>
+                                    <span class="text-[11px] text-gray-500 font-black">${t.startTime}</span>
+                                </div>
+                                <div class="text-xs font-black flex items-center gap-1 text-gray-900 mt-1">
+                                    <span>${t.from}</span>
+                                    <i class="fa-solid fa-arrow-right text-mickeyRed text-[10px]"></i>
+                                    <span>${t.to}</span>
+                                </div>
+                                <div class="text-[11px] text-gray-500 pt-1 border-t border-gray-100 mt-1 flex justify-between">
+                                    <span class="font-extrabold text-gray-800">${t.mode}</span>
+                                    <span class="font-black text-mickeyRed">${t.duration}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                container.innerHTML += cardHTML;
+            });
+        }
+
+        // 頁面載入時初始化 Firebase
+        window.addEventListener('load', () => {
+            initFirebase();
+            switchDate('10/21');
+        });
+    </script>
+</body>
+</html>
