@@ -95,9 +95,9 @@
                 <button onclick="shareTripLink()" title="複製分享連結" class="text-[10px] font-black bg-mickeyRed text-white px-2 py-1 rounded-full shadow-xs hover:bg-red-700 transition flex items-center gap-1">
                     <i class="fa-solid fa-share-nodes"></i> 分享
                 </button>
-                <div id="sync-status-badge" class="text-[10px] font-extrabold text-emerald-700 bg-emerald-50 px-2 py-1 rounded-full border border-emerald-200 flex items-center gap-1 shadow-2xs">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                    <span id="sync-status-text">同步中</span>
+                <div id="sync-status-badge" onclick="showDiagnosticHelp()" class="text-[10px] font-extrabold text-emerald-700 bg-emerald-50 px-2 py-1 rounded-full border border-emerald-200 flex items-center gap-1 shadow-2xs cursor-pointer">
+                    <span id="sync-status-dot" class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span id="sync-status-text">連線檢查中...</span>
                 </div>
             </div>
         </header>
@@ -450,6 +450,45 @@
         </div>
     </div>
 
+    <!-- MODAL: 連線診斷說明 Modal -->
+    <div id="help-modal" class="fixed inset-0 bg-black/70 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white w-full max-w-sm rounded-3xl p-5 space-y-4 shadow-2xl border border-gray-200">
+            <div class="flex justify-between items-center border-b border-gray-100 pb-2">
+                <h3 class="font-black text-mickeyBlack text-xs flex items-center gap-1.5">
+                    <i class="fa-solid fa-plug text-mickeyRed"></i> Firebase 連線排除教學
+                </h3>
+                <button onclick="closeHelpModal()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-sm"></i></button>
+            </div>
+
+            <div class="space-y-3 text-xs text-gray-700 font-bold">
+                <p id="help-modal-msg" class="bg-amber-50 text-amber-900 p-2.5 rounded-xl border border-amber-200 text-[11px]">
+                    請對照以下 Firebase 後台步驟檢查：
+                </p>
+
+                <div class="space-y-2 text-[11px]">
+                    <div class="bg-gray-50 p-2.5 rounded-xl border border-gray-200">
+                        <div class="font-black text-mickeyBlack">1️⃣ 是否開啟「匿名登入」？</div>
+                        <p class="text-gray-500 font-normal mt-0.5">進入 Firebase Console -> Authentication -> 登入方法 -> 找到「匿名」並開啟儲存。</p>
+                    </div>
+
+                    <div class="bg-gray-50 p-2.5 rounded-xl border border-gray-200">
+                        <div class="font-black text-mickeyBlack">2️⃣ 是否已建立「Firestore Database」？</div>
+                        <p class="text-gray-500 font-normal mt-0.5">進入 Firestore Database -> 點擊「建立資料庫」-> 選擇「以測試模式啟動」。</p>
+                    </div>
+
+                    <div class="bg-gray-50 p-2.5 rounded-xl border border-gray-200">
+                        <div class="font-black text-mickeyBlack">3️⃣ 安全性規則是否被拒絕？</div>
+                        <p class="text-gray-500 font-normal mt-0.5">至 Firestore 的「規則」頁面，確定開放讀寫權限 (`allow read, write: if true;`) 並點擊「發布」。</p>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="closeHelpModal()" class="w-full bg-mickeyBlack text-white font-black py-2.5 rounded-xl text-xs transition">
+                我知道了，重新整理測試
+            </button>
+        </div>
+    </div>
+
     <!-- 複製連結成功 Toast 通知 -->
     <div id="toast-msg" class="fixed bottom-20 left-1/2 -translate-x-1/2 bg-mickeyBlack text-white font-black text-xs px-4 py-2.5 rounded-2xl shadow-2xl z-50 flex items-center gap-2 transition opacity-0 pointer-events-none transform translate-y-2">
         <i class="fa-solid fa-circle-check text-emerald-400"></i>
@@ -479,6 +518,7 @@
         let app, auth, db;
         let currentUser = null;
         let isCloudConnected = false;
+        let lastErrorReason = '';
 
         // 預設預載之 Day 0 檢查項目資料庫
         let dayZeroChecklist = [
@@ -569,13 +609,13 @@
                     if (userEl) userEl.innerText = `協作者 ID: ${currentUser.uid}`;
                 }
 
-                isCloudConnected = true;
-                updateSyncUI(true);
-
                 // 監聽公用雲端檢查清單 Collection
                 const checklistRef = collection(db, 'artifacts', appId, 'public', 'data', 'checklist');
                 
                 onSnapshot(checklistRef, (snapshot) => {
+                    isCloudConnected = true;
+                    updateSyncUI('online');
+
                     if (!snapshot.empty) {
                         const items = [];
                         snapshot.forEach((doc) => {
@@ -589,13 +629,22 @@
                     if (currentDate === '10/21') renderItinerary();
                 }, (error) => {
                     console.error("Firestore onSnapshot Error:", error);
-                    updateSyncUI(false);
+                    isCloudConnected = false;
+                    if (error.code === 'permission-denied') {
+                        updateSyncUI('permission-denied');
+                    } else {
+                        updateSyncUI('error');
+                    }
                 });
 
             } catch (err) {
-                console.warn("無法連接雲端，切換為本地離線模式:", err);
+                console.warn("無法連接 Firebase 雲端:", err);
                 isCloudConnected = false;
-                updateSyncUI(false);
+                if (err.code === 'auth/operation-not-allowed') {
+                    updateSyncUI('auth-disabled');
+                } else {
+                    updateSyncUI('error');
+                }
                 renderItinerary();
             }
         }
@@ -612,17 +661,44 @@
             }
         }
 
-        function updateSyncUI(online) {
+        function updateSyncUI(status) {
             const statusText = document.getElementById('sync-status-text');
             const statusBadge = document.getElementById('sync-status-badge');
-            if (online) {
+            const statusDot = document.getElementById('sync-status-dot');
+
+            if (status === 'online') {
                 statusText.innerText = "已實時同步雲端";
-                statusBadge.className = "text-[10px] font-extrabold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200 flex items-center gap-1.5 shadow-2xs";
+                statusBadge.className = "text-[10px] font-extrabold text-emerald-700 bg-emerald-50 px-2 py-1 rounded-full border border-emerald-200 flex items-center gap-1 shadow-2xs cursor-pointer";
+                statusDot.className = "w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse";
+            } else if (status === 'permission-denied') {
+                lastErrorReason = "Firestore 權限遭拒：請點擊本徽章查看如何於 Firebase 規則開啟讀寫權限。";
+                statusText.innerText = "⚠️ 權限拒絕 (點擊處置)";
+                statusBadge.className = "text-[10px] font-extrabold text-amber-700 bg-amber-50 px-2 py-1 rounded-full border border-amber-300 flex items-center gap-1 shadow-2xs cursor-pointer";
+                statusDot.className = "w-1.5 h-1.5 rounded-full bg-amber-500";
+            } else if (status === 'auth-disabled') {
+                lastErrorReason = "未開啟匿名登入：請在 Firebase Authentication 啟動「匿名登入」。";
+                statusText.innerText = "⚠️ 未開啟匿名登入";
+                statusBadge.className = "text-[10px] font-extrabold text-red-700 bg-red-50 px-2 py-1 rounded-full border border-red-300 flex items-center gap-1 shadow-2xs cursor-pointer";
+                statusDot.className = "w-1.5 h-1.5 rounded-full bg-red-500";
             } else {
-                statusText.innerText = "離線模式";
-                statusBadge.className = "text-[10px] font-extrabold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200 flex items-center gap-1.5 shadow-2xs";
+                lastErrorReason = "離線狀態：尚未填入你的 Firebase 金鑰，或網路未連接。";
+                statusText.innerText = "離線模式 (點擊說明)";
+                statusBadge.className = "text-[10px] font-extrabold text-gray-700 bg-gray-100 px-2 py-1 rounded-full border border-gray-300 flex items-center gap-1 shadow-2xs cursor-pointer";
+                statusDot.className = "w-1.5 h-1.5 rounded-full bg-gray-400";
             }
         }
+
+        window.showDiagnosticHelp = function() {
+            const msgEl = document.getElementById('help-modal-msg');
+            if (msgEl) {
+                msgEl.innerText = lastErrorReason || "目前處於離線存取模式，請檢查 Firebase Console 設定。";
+            }
+            document.getElementById('help-modal').classList.remove('hidden');
+        };
+
+        window.closeHelpModal = function() {
+            document.getElementById('help-modal').classList.add('hidden');
+        };
 
         // 全域函式綁定至 window 以利 HTML 事件觸發
         window.toggleDrawer = function() {
