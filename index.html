@@ -3,6 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- PWA 全螢幕與離線 App 支援設定 -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="迪士尼手帳">
+    <meta name="theme-color" content="#111111">
     <title>迪士尼與 EPCOT 頂級精準導覽手帳 (協作版)</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -139,17 +145,6 @@
                             </div>
                             <i class="fa-solid fa-chevron-right text-[10px] text-epcotPurple"></i>
                         </button>
-                    </div>
-
-                    <!-- 協作者連線資訊卡 -->
-                    <div class="bg-gray-50 p-3.5 rounded-2xl border border-gray-200 text-xs space-y-1">
-                        <div class="font-black text-gray-700 flex items-center gap-1.5">
-                            <i class="fa-solid fa-users text-mickeyRed"></i> 協同編輯狀態
-                        </div>
-                        <p class="text-[10px] text-gray-500 font-bold">所有成員進行的勾選與修改將即時發布給所有在線夥伴。</p>
-                        <div id="user-id-display" class="text-[9px] font-mono bg-white p-1.5 rounded border border-gray-200 text-gray-400 truncate mt-1">
-                            用戶 ID: 載入中...
-                        </div>
                     </div>
                 </div>
 
@@ -499,7 +494,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Firebase 初始化邏輯與正式專案設定
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'mickey-trip-2026';
@@ -519,6 +514,45 @@
         let currentUser = null;
         let isCloudConnected = false;
         let lastErrorReason = '';
+
+        // 本地備份與離線存取控制 (LocalStorage Dual Backup)
+        function saveLocalBackup(data) {
+            try { localStorage.setItem('disney_checklist_backup', JSON.stringify(data)); } catch(e){}
+        }
+        function getLocalBackup() {
+            try {
+                const saved = localStorage.getItem('disney_checklist_backup');
+                return saved ? JSON.parse(saved) : null;
+            } catch(e){ return null; }
+        }
+
+        // 註冊極簡 Service Worker 以啟用離線 PWA 快取
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                const swCode = `
+                    const CACHE_NAME = 'disney-trip-v1';
+                    self.addEventListener('install', (e) => e.waitUntil(self.skipWaiting()));
+                    self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()));
+                    self.addEventListener('fetch', (e) => {
+                        e.respondWith(
+                            fetch(e.request).catch(() => caches.match(e.request))
+                        );
+                    });
+                `;
+                const blob = new Blob([swCode], { type: 'application/javascript' });
+                navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(() => {});
+            });
+        }
+
+        // 監聽網路連線狀態切換
+        window.addEventListener('online', () => {
+            window.showToast?.('🌐 網路已恢復連線！');
+            updateSyncUI('online');
+        });
+        window.addEventListener('offline', () => {
+            window.showToast?.('📡 已切換至離線快取模式');
+            updateSyncUI('offline');
+        });
 
         // 預設預載之 Day 0 檢查項目資料庫
         let dayZeroChecklist = [
@@ -596,6 +630,23 @@
                 auth = getAuth(app);
                 db = getFirestore(app);
 
+                // 啟動 Firestore 本地 IndexedDB 離線快取
+                try {
+                    await enableIndexedDbPersistence(db);
+                } catch (err) {
+                    if (err.code === 'failed-precondition') {
+                        console.warn('離線快取失敗：多個分頁同時開啟');
+                    } else if (err.code === 'unimplemented') {
+                        console.warn('當前瀏覽器不支援 IndexedDB 離線快取');
+                    }
+                }
+
+                // 優先讀取 LocalStorage 本地備份資料（確保完全斷網時依然順暢）
+                const localData = getLocalBackup();
+                if (localData && localData.length > 0) {
+                    dayZeroChecklist = localData;
+                }
+
                 // 身份驗證
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                     await signInWithCustomToken(auth, __initial_auth_token);
@@ -604,17 +655,17 @@
                 }
 
                 currentUser = auth.currentUser;
-                if (currentUser) {
-                    const userEl = document.getElementById('user-id-display');
-                    if (userEl) userEl.innerText = `協作者 ID: ${currentUser.uid}`;
-                }
 
                 // 監聽公用雲端檢查清單 Collection
                 const checklistRef = collection(db, 'artifacts', appId, 'public', 'data', 'checklist');
                 
                 onSnapshot(checklistRef, (snapshot) => {
-                    isCloudConnected = true;
-                    updateSyncUI('online');
+                    if (navigator.onLine) {
+                        isCloudConnected = true;
+                        updateSyncUI('online');
+                    } else {
+                        updateSyncUI('offline');
+                    }
 
                     if (!snapshot.empty) {
                         const items = [];
@@ -622,29 +673,21 @@
                             items.push({ id: doc.id, ...doc.data() });
                         });
                         dayZeroChecklist = items;
+                        saveLocalBackup(items); // 隨時寫入 LocalStorage 快取
                     } else {
-                        // 初始化資料庫預設資料
                         seedInitialChecklist();
                     }
                     if (currentDate === '10/21') renderItinerary();
                 }, (error) => {
                     console.error("Firestore onSnapshot Error:", error);
                     isCloudConnected = false;
-                    if (error.code === 'permission-denied') {
-                        updateSyncUI('permission-denied');
-                    } else {
-                        updateSyncUI('error');
-                    }
+                    updateSyncUI(!navigator.onLine ? 'offline' : (error.code === 'permission-denied' ? 'permission-denied' : 'error'));
                 });
 
             } catch (err) {
-                console.warn("無法連接 Firebase 雲端:", err);
+                console.warn("無法連接 Firebase 雲端，已啟用本地離線模式:", err);
                 isCloudConnected = false;
-                if (err.code === 'auth/operation-not-allowed') {
-                    updateSyncUI('auth-disabled');
-                } else {
-                    updateSyncUI('error');
-                }
+                updateSyncUI('offline');
                 renderItinerary();
             }
         }
@@ -666,22 +709,24 @@
             const statusBadge = document.getElementById('sync-status-badge');
             const statusDot = document.getElementById('sync-status-dot');
 
+            if (!statusText || !statusBadge || !statusDot) return;
+
             if (status === 'online') {
                 statusText.innerText = "已實時同步雲端";
                 statusBadge.className = "text-[10px] font-extrabold text-emerald-700 bg-emerald-50 px-2 py-1 rounded-full border border-emerald-200 flex items-center gap-1 shadow-2xs cursor-pointer";
                 statusDot.className = "w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse";
+            } else if (status === 'offline') {
+                lastErrorReason = "目前處於離線快取模式。您修改的資料已儲存於手機，連線上網後將自動發送回雲端。";
+                statusText.innerText = "📡 離線快取模式";
+                statusBadge.className = "text-[10px] font-extrabold text-blue-700 bg-blue-50 px-2 py-1 rounded-full border border-blue-200 flex items-center gap-1 shadow-2xs cursor-pointer";
+                statusDot.className = "w-1.5 h-1.5 rounded-full bg-blue-500";
             } else if (status === 'permission-denied') {
                 lastErrorReason = "Firestore 權限遭拒：請點擊本徽章查看如何於 Firebase 規則開啟讀寫權限。";
                 statusText.innerText = "⚠️ 權限拒絕 (點擊處置)";
                 statusBadge.className = "text-[10px] font-extrabold text-amber-700 bg-amber-50 px-2 py-1 rounded-full border border-amber-300 flex items-center gap-1 shadow-2xs cursor-pointer";
                 statusDot.className = "w-1.5 h-1.5 rounded-full bg-amber-500";
-            } else if (status === 'auth-disabled') {
-                lastErrorReason = "未開啟匿名登入：請在 Firebase Authentication 啟動「匿名登入」。";
-                statusText.innerText = "⚠️ 未開啟匿名登入";
-                statusBadge.className = "text-[10px] font-extrabold text-red-700 bg-red-50 px-2 py-1 rounded-full border border-red-300 flex items-center gap-1 shadow-2xs cursor-pointer";
-                statusDot.className = "w-1.5 h-1.5 rounded-full bg-red-500";
             } else {
-                lastErrorReason = "離線狀態：尚未填入你的 Firebase 金鑰，或網路未連接。";
+                lastErrorReason = "離線狀態：已自動讀取手機本地備份檔。";
                 statusText.innerText = "離線模式 (點擊說明)";
                 statusBadge.className = "text-[10px] font-extrabold text-gray-700 bg-gray-100 px-2 py-1 rounded-full border border-gray-300 flex items-center gap-1 shadow-2xs cursor-pointer";
                 statusDot.className = "w-1.5 h-1.5 rounded-full bg-gray-400";
@@ -892,14 +937,14 @@
         window.closeDetailModal = function() {
             document.getElementById('detail-modal').classList.add('hidden');
         };
-
-        // 勾選項目（雲端實時同步）
+        // 勾選項目（離線優先 + 雲端同步）
         window.toggleCheckItem = async function(id) {
             const item = dayZeroChecklist.find(c => c.id === id);
             if (!item) return;
 
             const newCheckedState = !item.checked;
             item.checked = newCheckedState;
+            saveLocalBackup(dayZeroChecklist); // 立即寫入本地
             renderItinerary();
 
             if (isCloudConnected) {
@@ -907,7 +952,7 @@
                     const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'checklist', id);
                     await updateDoc(docRef, { checked: newCheckedState });
                 } catch (e) {
-                    console.error("更新勾選狀態至雲端失敗:", e);
+                    console.error("更新勾選狀態至雲端失敗（已先存至本地）:", e);
                 }
             }
         };
