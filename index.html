@@ -2,19 +2,18 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#e72638"><meta name="apple-mobile-web-app-capable" content="yes">
-  <title>Disney Travel Planner</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;700;800;900&display=swap" rel="stylesheet">
+  <meta name="theme-color" content="#10132c"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Trip Planner">
+  <title>Disney Trip Planner · V3</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@500;600;700&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
   <div class="app-shell">
-    <header class="topbar"><button class="icon-button" id="menu-button" aria-label="選單">☰</button><div><b>Disney Travel Planner</b><small id="sync-state">準備連線</small></div><button class="share-button" id="share-button">分享</button></header>
+    <header class="topbar"><button class="round-control" id="menu-button" aria-label="開啟選單">☰</button><div class="brand"><b>Trip Planner</b><small><i></i><span id="sync-state">正在連線</span></small></div><button class="round-control share-control" id="share-button" aria-label="分享旅程">↗</button></header>
     <main id="app" class="content"></main>
-    <nav class="tabbar"><button data-view="itinerary">✦<span>行程</span></button><button data-view="cruise">⚓<span>Wish</span></button><button data-view="epcot">◎<span>EPCOT</span></button></nav>
+    <nav class="tabbar" aria-label="主要導覽"><button data-view="itinerary"><span>⌂</span><small>旅程</small></button><button data-view="cruise"><span>⌁</span><small>Wish</small></button><button data-view="epcot"><span>◎</span><small>EPCOT</small></button></nav>
   </div>
-  <aside id="drawer" class="drawer" aria-hidden="true"><div class="drawer-panel"><div class="drawer-head"><b>米奇的旅程</b><button class="icon-button close-drawer">×</button></div><button data-view="itinerary">✦ 行程與待辦</button><button data-view="cruise">⚓ Disney Wish</button><button data-view="epcot">◎ EPCOT</button><hr><button id="vault-entry" class="vault-entry">🔒 保險箱 <span>›</span></button><button id="settings-entry">⚙️ 設定</button></div></aside>
+  <aside id="drawer" class="drawer" aria-hidden="true"><div class="drawer-panel"><div class="drawer-head"><div class="mini-mark">✦</div><div><b>Trip Planner</b><small>Orlando · 2026</small></div><button class="round-control close-drawer">×</button></div><div class="drawer-label">探索旅程</div><button data-view="itinerary">⌂　我的行程</button><button data-view="cruise">⌁　Disney Wish</button><button data-view="epcot">◎　EPCOT</button><div class="drawer-label">私人內容</div><button id="vault-entry" class="vault-entry">⌑　保險箱 <span>›</span></button><button id="settings-entry">⚙　設定</button><p class="drawer-foot">V3 · Your private travel companion</p></div></aside>
   <div id="sheet-root"></div><div id="toast" role="status"></div>
   <script type="module" src="./js/app.js"></script>
 </body>
