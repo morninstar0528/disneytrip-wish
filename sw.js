@@ -1,4 +1,4 @@
-const CACHE='disney-journey-v4';
+const CACHE='disney-journey-v5';
 const LOCAL=['./','./index.html','./styles.css','./js/app.js','./js/data.js','./js/crypto.js','./js/firebase.js'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(LOCAL)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',e=>e.waitUntil(self.clients.claim()));
