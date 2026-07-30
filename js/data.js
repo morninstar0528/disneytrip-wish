@@ -1,7 +1,7 @@
 export const dates=['10/21','10/22','10/23','10/24','10/25','10/26','10/27','10/28','10/29','10/30','10/31'];
 export const defaultCards=[
  {id:'todo-passport',kind:'checklist',section:'schedule',date:'10/21',category:'出發準備',title:'確認護照與 ESTA',note:'護照效期至少六個月；出發前完成 ESTA 資料核對。',checked:false},
- {id:'flight-tpe',kind:'transport',section:'transport',date:'10/22',time:'20:10',category:'航班',title:'桃園 TPE → 美國',note:'提前 3 小時抵達機場，確認行李與登機證。'},
+ {id:'flight-tpe',kind:'transport',section:'transport',date:'10/22',time:'17:10',category:'航班',title:'桃園 TPE → 美國',note:'提前 3 小時抵達機場，確認行李與登機證。'},
  {id:'flight-jx032',kind:'transport',section:'transport',date:'10/22',time:'20:10',category:'星宇航空 JX032',title:'TPE → SEA',note:'豪華經濟艙；直飛 11 小時，10/22 16:10 抵達西雅圖。行李：2 件、每件 23 kg；手提 7 kg。'},
  {id:'flight-as390',kind:'transport',section:'transport',date:'10/22',time:'21:27',category:'Alaska Airlines AS390',title:'SEA → MCO',note:'經濟艙；直飛 5 小時 33 分，10/23 06:00 抵達奧蘭多。'},
  {id:'wish-board',kind:'transport',section:'transport',date:'10/23',time:'12:00',category:'登船',title:'Disney Wish 登船',note:'Port Canaveral；備妥護照與登船資料。'},
