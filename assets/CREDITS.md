@@ -13,5 +13,6 @@ These image files are bundled locally so the app can display them offline after 
 | `t2-map.svg` | Offline Maps Hero (#T2) | [Travel map — Openclipart](https://openclipart.org/detail/181224/travel-map), public-domain source |
 | `t3-luggage.svg` | Stays Hero (#T3) | [Luggage — Openclipart](https://openclipart.org/detail/305467/luggage), public-domain source |
 | `t4-expenses.svg` | Expenses Hero (#T4) | [Commercial — Openclipart](https://openclipart.org/detail/260700/commercial15), CC0 1.0 |
+| `交通按鈕.png`, `住宿按鈕.jpg` | Bottom toolbar — Transport and Stays buttons | User-provided image assets; confirm the rights before public distribution. |
 
 Before public/commercial distribution, review the source platform’s current licence and any venue/trademark restrictions. The UI is not endorsed by, or affiliated with, Disney.
