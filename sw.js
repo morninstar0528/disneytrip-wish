@@ -1,5 +1,5 @@
-const CACHE='disney-journey-v13';
-const LOCAL=['./','./index.html','./styles.css','./js/app.js','./js/data.js','./js/crypto.js','./js/firebase.js','./assets/castle-fireworks.jpg','./assets/wish-cruise.jpg','./assets/epcot-sphere.jpg','./assets/mickey-castle-menu.png'];
+const CACHE='disney-journey-v15';
+const LOCAL=['./','./index.html','./styles.css','./js/app.js','./js/data.js','./js/crypto.js','./js/firebase.js','./assets/castle-fireworks.jpg','./assets/wish-cruise.jpg','./assets/epcot-sphere.jpg','./assets/mickey-castle-menu.png','./assets/278-2780349_mickey-mouse-face-png.png','./assets/OIP.webp','./assets/OIP (1).webp','./assets/OIP (2).webp','./assets/下載 (1).webp','./assets/t1-airplane.svg','./assets/t2-map.svg','./assets/t3-luggage.svg','./assets/t4-expenses.svg'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(LOCAL)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim())));
 self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;e.respondWith(caches.match(e.request).then(cached=>cached||fetch(e.request).then(r=>{const copy=r.clone();caches.open(CACHE).then(c=>c.put(e.request,copy));return r}).catch(()=>caches.match('./index.html'))))});
