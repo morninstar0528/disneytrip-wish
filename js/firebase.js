@@ -10,8 +10,8 @@ class TripStore{
         import('https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js'),import('https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js'),import('https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js')]);
       const config=typeof __firebase_config!=='undefined'?JSON.parse(__firebase_config):{apiKey:'AIzaSyDRyZ4APvVvJ7jwxy2S8aqP9lIWmqjf7po',authDomain:'disneytrip-wish.firebaseapp.com',projectId:'disneytrip-wish',appId:'1:137088474334:web:dd46e5fa0eac4f0337364f'};
       this.db=getFirestore(initializeApp(config));this.api={collection,doc,setDoc,deleteDoc,onSnapshot,getDoc,getDocs};
-      const auth=getAuth();await signInAnonymously(auth);this.uid=auth.currentUser.uid;onState('雲端已同步');return true;
-    }catch(_){return false}
+      const auth=getAuth(),credential=await signInAnonymously(auth);this.uid=credential.user?.uid||auth.currentUser?.uid;if(!this.uid)throw new Error('Anonymous sign-in did not return a user');onState('雲端已同步');return true;
+    }catch(_){this.db=null;this.api=null;this.uid=null;onState('離線可用');return false}
   }
   base(name){return this.api.collection(this.db,'artifacts',appId,'users',this.uid,name)}
   async put(name,id,data){const rows=read(name),next=[...rows.filter(x=>x.id!==id),{id,...data}];write(name,next);if(this.db)return this.api.setDoc(this.api.doc(this.base(name),id),data)}
