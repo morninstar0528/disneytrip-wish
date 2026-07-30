@@ -1,4 +1,4 @@
-const CACHE='disney-journey-v12';
+const CACHE='disney-journey-v13';
 const LOCAL=['./','./index.html','./styles.css','./js/app.js','./js/data.js','./js/crypto.js','./js/firebase.js','./assets/castle-fireworks.jpg','./assets/wish-cruise.jpg','./assets/epcot-sphere.jpg','./assets/mickey-castle-menu.png'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(LOCAL)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim())));
