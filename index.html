@@ -1,19 +1,45 @@
 <!doctype html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#10132c"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Trip Planner">
-  <title>Disney Trip Planner · V3</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@500;600;700&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta name="theme-color" content="#15172e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Disney Journey">
+  <title>The Disney journey continues.</title>
   <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
   <div class="app-shell">
-    <header class="topbar"><button class="round-control" id="menu-button" aria-label="開啟選單">☰</button><div class="brand"><b>Trip Planner</b><small><i></i><span id="sync-state">正在連線</span></small></div><button class="round-control share-control" id="share-button" aria-label="分享旅程">↗</button></header>
+    <header class="topbar">
+      <button class="round-control tactile-control" id="back-button" type="button" aria-label="回到上一頁">‹</button>
+      <div class="brand"><b>The Disney journey continues.</b><small>美東美西，玩到美叮美噹 · <span id="sync-state">離線可用</span></small></div>
+      <span class="mouse-mark" aria-hidden="true"></span>
+    </header>
     <main id="app" class="content"></main>
-    <nav class="tabbar" aria-label="主要導覽"><button data-view="itinerary"><span>⌂</span><small>旅程</small></button><button data-view="cruise"><span>⌁</span><small>Wish</small></button><button data-view="epcot"><span>◎</span><small>EPCOT</small></button></nav>
+    <nav class="tabbar" aria-label="主要工具列">
+      <button data-view="transport" type="button"><span>✦</span><small>交通</small></button>
+      <button data-view="map" type="button"><span>⌖</span><small>地圖</small></button>
+      <button class="mouse-menu" id="menu-button" type="button" aria-label="開啟功能選單"><span class="mouse-face" aria-hidden="true"></span><small>選單</small></button>
+      <button data-view="stays" type="button"><span>⌂</span><small>住宿</small></button>
+      <button data-view="expenses" type="button"><span>◌</span><small>花費</small></button>
+    </nav>
   </div>
-  <aside id="drawer" class="drawer" aria-hidden="true"><div class="drawer-panel"><div class="drawer-head"><div class="mini-mark">✦</div><div><b>Trip Planner</b><small>Orlando · 2026</small></div><button class="round-control close-drawer">×</button></div><div class="drawer-label">探索旅程</div><button data-view="itinerary">⌂　我的行程</button><button data-view="cruise">⌁　Disney Wish</button><button data-view="epcot">◎　EPCOT</button><div class="drawer-label">私人內容</div><button id="vault-entry" class="vault-entry">⌑　保險箱 <span>›</span></button><button id="settings-entry">⚙　設定</button><p class="drawer-foot">V3 · Your private travel companion</p></div></aside>
+  <aside id="drawer" class="drawer" aria-hidden="true">
+    <div class="drawer-panel">
+      <div class="drawer-head"><div class="mini-mark">●</div><div><b>Disney Journey</b><small>功能頁簽</small></div><button class="round-control close-drawer" type="button" aria-label="關閉選單">×</button></div>
+      <div class="drawer-label">探索旅程</div>
+      <button data-view="itinerary" type="button">① 每日行程 <small>Daily Schedule</small></button>
+      <button data-view="cruise" type="button">② 許願號 <small>Disney Wish</small></button>
+      <button data-view="epcot" type="button">③ 新世紀樂園 <small>EPCOT</small></button>
+      <button data-view="disneyland" type="button">④ 加州迪士尼 <small>Disneyland Park</small></button>
+      <div class="drawer-label">私人資訊</div>
+      <button id="vault-entry" class="vault-entry" type="button">⑤ 重要資訊 <small>Personal info.</small><span>›</span></button>
+      <button data-view="contacts" type="button">⑥ 聯絡資訊 <small>Contacts</small></button>
+      <p class="drawer-foot">所有圖片與圖像按鈕均附說明與編號，方便後續替換素材。</p>
+    </div>
+  </aside>
   <div id="sheet-root"></div><div id="toast" role="status"></div>
   <script type="module" src="./js/app.js"></script>
 </body>
